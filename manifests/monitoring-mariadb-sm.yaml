@@ -1,0 +1,14 @@
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: mariadb
+  namespace: monitoring
+spec:
+  namespaceSelector:
+    matchNames: ["blog"]
+  selector:
+    matchLabels:
+      app: mariadb
+  endpoints:
+  - port: metrics
+    interval: 30s

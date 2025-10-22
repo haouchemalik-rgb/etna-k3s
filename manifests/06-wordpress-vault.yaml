@@ -1,0 +1,61 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: wordpress
+  namespace: blog
+  labels: { app: wordpress }
+spec:
+  replicas: 1
+  selector: { matchLabels: { app: wordpress } }
+  template:
+    metadata:
+      labels: { app: wordpress, tier: frontend }
+      annotations:
+        # === Vault Agent Injector ===
+        vault.hashicorp.com/agent-inject: "true"
+        vault.hashicorp.com/role: "blog-role"
+        vault.hashicorp.com/agent-inject-secret-wp.env: "kv/data/blog/db"
+        vault.hashicorp.com/agent-inject-template-wp.env: |
+          {{- with secret "kv/data/blog/db" -}}
+          WORDPRESS_DB_HOST=mariadb.blog.svc.cluster.local
+          WORDPRESS_DB_NAME={{ .Data.data.MYSQL_DATABASE }}
+          WORDPRESS_DB_USER={{ .Data.data.MYSQL_USER }}
+          WORDPRESS_DB_PASSWORD={{ .Data.data.MYSQL_PASSWORD }}
+          {{- end -}}
+        # Adresse du Vault dans le cluster + TLS off (on est en HTTP avec le chart par défaut)
+        vault.hashicorp.com/agent-inject-vault-addr: "http://vault.vault.svc:8200"
+        vault.hashicorp.com/tls-skip-verify: "true"
+    spec:
+      serviceAccountName: default
+      containers:
+        - name: wordpress
+          image: wordpress:6.6-apache
+          ports: [ { containerPort: 80 } ]
+          # On source /vault/secrets/wp.env (injecté par Vault) AVANT de démarrer Apache
+          command: ["/bin/sh","-lc"]
+          args:
+            - |
+              set -e
+              if [ -f /vault/secrets/wp.env ]; then
+                set -a
+                . /vault/secrets/wp.env
+                set +a
+              fi
+              export WORDPRESS_CONFIG_EXTRA="define('WP_HOME','https://web.etna.student'); define('WP_SITEURL','https://web.etna.student');"
+              exec docker-entrypoint.sh apache2-foreground
+          volumeMounts:
+            - name: wp-content
+              mountPath: /var/www/html/wp-content
+          readinessProbe:
+            httpGet: { path: "/", port: 80 }
+            initialDelaySeconds: 15
+            periodSeconds: 10
+            timeoutSeconds: 2
+          livenessProbe:
+            httpGet: { path: "/", port: 80 }
+            initialDelaySeconds: 45
+            periodSeconds: 10
+            timeoutSeconds: 2
+      volumes:
+        - name: wp-content
+          persistentVolumeClaim: { claimName: wordpress-pvc }

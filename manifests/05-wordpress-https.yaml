@@ -1,0 +1,30 @@
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: wp-redirect
+  namespace: blog
+spec:
+  entryPoints: [web]   # <- not "http"
+  routes:
+  - match: Host(`web.etna.student`)
+    kind: Rule
+    middlewares:
+    - name: wp-redirect-https
+    services:
+    - name: wordpress
+      port: 80
+---
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: wp-https
+  namespace: blog
+spec:
+  entryPoints: [websecure]   # <- not "https"
+  routes:
+  - match: Host(`web.etna.student`)
+    kind: Rule
+    services:
+    - name: wordpress
+      port: 80
+  tls: {}   # self-signed default cert (OK for the subject)

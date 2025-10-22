@@ -1,0 +1,53 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: wordpress
+  namespace: blog
+  labels: { app: wordpress }
+spec:
+  type: ClusterIP
+  selector: { app: wordpress }
+  ports:
+    - name: http
+      port: 80
+      targetPort: 80
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: wordpress
+  namespace: blog
+spec:
+  replicas: 1
+  selector:
+    matchLabels: { app: wordpress }
+  template:
+    metadata:
+      labels: { app: wordpress, tier: frontend }
+    spec:
+      containers:
+        - name: wordpress
+          image: wordpress:6.6-apache
+          ports: [ { containerPort: 80 } ]
+          envFrom: [ { secretRef: { name: wp-secret } } ]
+          volumeMounts: [ { name: wp-content, mountPath: /var/www/html/wp-content } ]
+          readinessProbe: { httpGet: { path: "/", port: 80 }, initialDelaySeconds: 10 }
+          livenessProbe:  { httpGet: { path: "/", port: 80 }, initialDelaySeconds: 30 }
+      volumes:
+        - name: wp-content
+          persistentVolumeClaim: { claimName: wordpress-pvc }
+---
+# Traefik CRD: utiliser le groupe traefik.io
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: wp-http
+  namespace: blog
+spec:
+  entryPoints: [ web ]
+  routes:
+    - match: Host(`web.etna.student`)
+      kind: Rule
+      services:
+        - name: wordpress
+          port: 80

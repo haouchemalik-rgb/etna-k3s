@@ -1,0 +1,27 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: blog-rules
+  namespace: monitoring
+spec:
+  groups:
+  - name: mariadb.rules
+    rules:
+    - alert: MySQLDown
+      expr: mysql_up == 0
+      for: 2m
+      labels:
+        severity: critical
+      annotations:
+        summary: "MariaDB exporter ne répond plus"
+        description: "mysql_up == 0 depuis 2m (exporter/mariadb)."
+  - name: wordpress.rules
+    rules:
+    - alert: WordPressDown
+      expr: probe_success{job=~".*blackbox.*"} == 0
+      for: 2m
+      labels:
+        severity: warning
+      annotations:
+        summary: "WordPress indisponible (blackbox)"
+        description: "Le probe HTTP(S) échoue (probe_success=0) depuis 2m."

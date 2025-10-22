@@ -1,0 +1,57 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mariadb-exporter
+  namespace: blog
+  labels:
+    app: mariadb
+    tier: exporter
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mariadb
+      tier: exporter
+  template:
+    metadata:
+      labels:
+        app: mariadb
+        tier: exporter
+    spec:
+      volumes:
+      - name: exporter-cnf
+        secret:
+          secretName: mysqld-exporter-cnf
+      containers:
+      - name: mysqld-exporter
+        image: prom/mysqld-exporter:v0.15.1
+        imagePullPolicy: IfNotPresent
+        args:
+          - "--web.listen-address=:9104"
+          - "--config.my-cnf=/etc/.my.cnf"
+          - "--mysqld.address=mariadb.blog.svc.cluster.local:3306"
+        ports:
+        - name: metrics
+          containerPort: 9104
+        volumeMounts:
+        - name: exporter-cnf
+          mountPath: /etc/.my.cnf
+          subPath: .my.cnf
+          readOnly: true
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mariadb-metrics
+  namespace: blog
+  labels:
+    app: mariadb
+    tier: exporter
+spec:
+  selector:
+    app: mariadb
+    tier: exporter
+  ports:
+  - name: metrics
+    port: 9104
+    targetPort: 9104
