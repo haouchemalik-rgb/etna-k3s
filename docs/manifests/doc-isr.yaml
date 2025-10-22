@@ -1,0 +1,71 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: doc-isr
+  namespace: blog
+  labels: { app: doc-isr }
+spec:
+  replicas: 1
+  selector:
+    matchLabels: { app: doc-isr }
+  template:
+    metadata:
+      labels: { app: doc-isr }
+    spec:
+      containers:
+      - name: nginx
+        image: registry.local/doc-isr:latest
+        ports:
+        - containerPort: 80
+        readinessProbe:
+          httpGet: { path: /, port: 80 }
+          initialDelaySeconds: 5
+          periodSeconds: 10
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: doc-isr
+  namespace: blog
+spec:
+  selector: { app: doc-isr }
+  ports:
+  - name: http
+    port: 80
+    targetPort: 80
+---
+# Traefik Middleware for BasicAuth (users in secret 'doc-auth')
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  name: doc-auth
+  namespace: blog
+spec:
+  basicAuth:
+    secret: doc-auth
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: doc-isr
+  namespace: blog
+  annotations:
+    kubernetes.io/ingress.class: traefik
+    traefik.ingress.kubernetes.io/router.entrypoints: websecure
+    traefik.ingress.kubernetes.io/router.tls: "true"
+    traefik.ingress.kubernetes.io/router.middlewares: "blog-doc-auth@kubernetescrd"
+spec:
+  tls:
+  - hosts: [ "doc.etna.student" ]
+    secretName: doc-tls
+  rules:
+  - host: doc.etna.student
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: doc-isr
+            port:
+              number: 80

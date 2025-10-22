@@ -1,0 +1,26 @@
+# Ignore generated files
+public/
+resources/
+
+# Ignore Git
+.git/
+.gitignore
+
+# Ignore IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Ignore OS files
+.DS_Store
+Thumbs.db
+
+# Ignore documentation and non-essential files
+README.md
+*.md
+!content/**/*.md
+
+# Ignore manifests
+manifests/

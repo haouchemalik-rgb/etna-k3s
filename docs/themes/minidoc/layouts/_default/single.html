@@ -1,0 +1,7 @@
+{{ define "main" }}
+<h1>{{ .Title }}</h1>
+{{ if .Params.toc | default true }}
+  <details open style="margin:0 0 1rem 0"><summary><b>Sommaire</b></summary>{{ .TableOfContents }}</details>
+{{ end }}
+{{ .Content }}
+{{ end }}

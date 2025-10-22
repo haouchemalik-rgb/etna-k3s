@@ -1,0 +1,6 @@
+name = "minidoc"
+license = "MIT"
+licenselink = "https://opensource.org/licenses/MIT"
+description = "Minimal offline theme for ISR docs"
+tags = ["minimal","docs"]
+min_version = "0.80.0"
