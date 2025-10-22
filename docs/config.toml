@@ -1,0 +1,11 @@
+baseURL = "https://doc.etna.student/"
+languageCode = "fr-fr"
+title = "Documentation Projet ISR-CLO4"
+theme = "minidoc"
+
+[params]
+  author = "Ethan Brunet"
+  description = "Documentation complète du projet Kubernetes ISR-CLO4"
+  ShowReadingTime = true
+  ShowBreadCrumbs = true
+  ShowToc = true
