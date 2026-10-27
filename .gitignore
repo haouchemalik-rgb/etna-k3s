@@ -1,0 +1,5 @@
+# Fichiers personnels / état local
+.bash_history
+.ssh/
+*.tfstate*
+kubeconfig*
