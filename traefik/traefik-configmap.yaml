@@ -11,9 +11,8 @@ data:
     [global]
       checkNewVersion = false
       sendAnonymousUsage = false
-    # Servers transport settings
-    [serversTransport]
-      insecureSkipVerify = true
+    # Servers transport settings : vérification TLS des backends conservée
+    # (les backends du cluster sont joints en HTTP interne, aucune exception nécessaire)
     # Entrypoints settings
     [entryPoints]
       [entryPoints.http]
@@ -34,7 +33,9 @@ data:
     [api]
       dashboard = true
       debug = false
-      insecure = true
+      # Pas de dashboard en accès libre : pour le consulter, publier api@internal
+      # via une IngressRoute protégée (BasicAuth + TLS)
+      insecure = false
     # Monitoring settings
     [ping]
       entryPoint = "monitoring"

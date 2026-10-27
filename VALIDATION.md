@@ -88,7 +88,13 @@ kubectl logs vault-0 -n vault
 ```bash
 kubectl port-forward svc/kps-grafana -n monitoring 3000:80
 ```
-✔️ Accède à http://172.16.248.21:30405/ ✔️ Login : admin / ***REMOVED*** ✔️ Les dashboards doivent afficher :
+✔️ Accès via https://grafana.etna.student ou le port-forward ci-dessus (http://127.0.0.1:3000) ✔️ Utilisateur `admin`, mot de passe stocké dans le Secret du chart :
+
+```bash
+kubectl get secret -n monitoring kps-grafana -o jsonpath='{.data.admin-password}' | base64 -d
+```
+
+✔️ Les dashboards doivent afficher :
 
 CPU / RAM / TCP
 Requêtes HTTP WordPress
@@ -110,8 +116,7 @@ Objets K8s (Deployments, ReplicaSets…)
 
 ✔️ Accès via : https://172.16.248.21:32443/ ✔️ Authentification basique activée ✔️ Contenu attendu :
 
-login: admin
-mdp: ***REMOVED***
+Identifiants : ceux définis lors de la création du Secret `doc-auth` (voir la page « Documentation » du site Hugo).
 
 Déploiement de chaque service
 Fonctionnement
@@ -146,4 +151,4 @@ kubectl get middleware -A
 
 redirect-https
 security-headers
-hugo-auth
+hugo-auth

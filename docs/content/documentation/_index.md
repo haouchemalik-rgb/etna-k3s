@@ -20,8 +20,10 @@ Voir `manifests/doc-isr.yaml` incluant :
 
 ### Création du secret BasicAuth
 ```bash
-kubectl -n blog create secret generic doc-auth   --from-literal=users="admin:$(openssl passwd -apr1 ***REMOVED***)"
+DOC_PASS=$(openssl rand -base64 18)          # mot de passe aléatoire, à conserver dans un gestionnaire de mots de passe
+kubectl -n blog create secret generic doc-auth --from-literal=users="admin:$(openssl passwd -apr1 "$DOC_PASS")"
+echo "$DOC_PASS"
 ```
 
 ### Vérification
-Ouvrir `https://doc.etna.student` (admin / ***REMOVED***).
+Ouvrir `https://doc.etna.student` et se connecter avec `admin` et le mot de passe généré ci-dessus.
